@@ -1,7 +1,80 @@
 ﻿@page "/"
 
-<PageTitle>Ordel fusk</PageTitle>
+<PageTitle>Wordle/Ordel Cheat</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="container">
+   <!-- Instructions div with a collapsable instructions list -->
+    <div class="container p-3 my-3 bg-dark-subtle text-white rounded">
+        <button class="btn btn-primary" style="width: 100%" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInstructions" aria-expanded="false" aria-controls="collapseInstructions">
+            Instructions
+        </button>
+        <div class="collapse" id="collapseInstructions">
+            <div style="margin-top: 10px" class="card card-body">
+                <h5>Instructions</h5>
+                <ul>
+                    <li>Make your guess in the real game</li>
+                    <li>Fill in your guess in the input down below</li>
+                    <li>Click on the palette icon and choose the right color for each letter</li>
+                    <li>Press the button, and the website will suggest the next best word to guess!</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
-Welcome to your new app.
+    <!-- The guess area -->
+    <div class="container p-3 my-3 bg-dark-subtle text-white rounded">
+        @for (int i = 0; i < aCurrentGuess+1; i++)
+        {
+            <div style="margin-top: 10px" class="d-flex flex-row justify-content-between">
+                @for (int j = 0; j < 5; j++)
+                {
+                    int index = i * 5 + j;
+                    <div class="text-center">
+                        <input style="background-color: @aColorForLetter[index]; color: black; font-weight: bold; text-align: center" disabled="@(aCurrentGuess > i)" @bind="aLettersGuessed[index]" type="text" class="form-control" />
+                        <i @onclick="x => SetIndex(index)" data-bs-toggle="modal" data-bs-target="#staticBackdropColorPicker" class="bi-palette-fill d-block mt-2" style="cursor: pointer"></i>
+                    </div>
+                }
+            </div>
+        }
+        <div style="margin-top: 10px">
+            <button disabled="@(aIsBusy || aCurrentGuess >= 5)" @onclick="Guess" style="width: 100%" class="btn btn-primary">Execute</button>
+        </div>
+    </div>
+
+    <!-- Shows the suggested words-->
+    <div class="container p-3 my-3 bg-dark-subtle text-white rounded">
+        <h4>Suggested words</h4>
+        <table style="margin-top: 10px" class="table table-hover table-striped">
+            <thead>
+                <tr>
+                    <th>Word</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var word in aWordListWithScore.OrderByDescending(x => x.Value).Take(20))
+                {
+                    <tr>
+                        <td>@word.Key</td>
+                        <td>@word.Value.ToString("0.00")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal for showing the color palette -->
+<div class="modal fade" id="staticBackdropColorPicker" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div style="height: 150px" class="row p-3">
+                    <div class="col rounded pa-4" style="background-color: darkgray; margin-right: 10px" data-bs-dismiss="modal" @onclick="@(x => ChangeColor(aChosenIndex, "darkgray"))">&nbsp;</div>
+                    <div class="col rounded pa-4" style="background-color: purple; margin-right: 10px" data-bs-dismiss="modal" @onclick="@(x => ChangeColor(aChosenIndex, "purple"))">&nbsp;</div>
+                    <div class="col rounded pa-4" style="background-color: darkgreen" data-bs-dismiss="modal" @onclick="@(x => ChangeColor(aChosenIndex, "darkgreen"))">&nbsp;</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

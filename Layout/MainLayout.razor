@@ -1,8 +1,36 @@
 ﻿@inherits LayoutComponentBase
+
+<BlazoredToasts />
+
 <div class="page">
     <main>
+        <nav class="navbar navbar-light sticky-top bg-dark-subtle p-2 justify-content-between">
+            <h5 text-white><b>Wordle Cheat</b></h5>
+
+            <!-- Language and dark/lightmode switch -->
+            <div class="d-flex flex-row">
+                <div>
+                    <i class="bi-translate"/>
+                </div>
+
+                <div style="margin-left: 20px" class="d-flex flex-row">
+                    <i class="bi-sun-fill" />
+                    <div class="form-check form-switch mx-2">
+                        <input onclick="darkModeSwitch()" class="form-check-input p-2" type="checkbox" id="flexSwitchCheckChecked" checked />
+                    </div>
+                    <i class="bi-moon-fill" />
+               </div>
+            </div>
+        </nav>
         <article class="content px-4">
             @Body
         </article>
     </main>
 </div>
+
+<script>
+   function darkModeSwitch() {
+       var element = document.body;
+       element.dataset.bsTheme = element.dataset.bsTheme == "light" ? "dark" : "light";
+   }
+</script>
