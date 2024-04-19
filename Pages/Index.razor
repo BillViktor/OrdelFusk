@@ -1,21 +1,18 @@
-﻿@page "/"
-
-<PageTitle>Wordle/Ordel Cheat</PageTitle>
+﻿<PageTitle>Wordle Cheat</PageTitle>
+@page "/"
 
 <div class="container">
    <!-- Instructions div with a collapsable instructions list -->
     <div class="container p-3 my-3 bg-dark-subtle text-white rounded">
-        <button class="btn btn-primary" style="width: 100%" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInstructions" aria-expanded="false" aria-controls="collapseInstructions">
-            Instructions
-        </button>
+        <button class="btn btn-primary" style="width: 100%" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInstructions" aria-expanded="false" aria-controls="collapseInstructions">Show Instructions</button>
         <div class="collapse" id="collapseInstructions">
             <div style="margin-top: 10px" class="card card-body">
                 <h5>Instructions</h5>
                 <ul>
-                    <li>Make your guess in the real game</li>
+                    <li>Make your guess in the real game Ordel</li>
                     <li>Fill in your guess in the input down below</li>
                     <li>Click on the palette icon and choose the right color for each letter</li>
-                    <li>Press the button, and the website will suggest the next best word to guess!</li>
+                    <li>Press the "Show Suggestions" button, and the website will suggest the best words to guess!</li>
                 </ul>
             </div>
         </div>
@@ -37,7 +34,7 @@
             </div>
         }
         <div style="margin-top: 10px">
-            <button disabled="@(aIsBusy || aCurrentGuess >= 5)" @onclick="Guess" style="width: 100%" class="btn btn-primary">Execute</button>
+            <button disabled="@(aIsBusy || aCurrentGuess >= 5)" @onclick="Guess" style="width: 100%" class="btn btn-primary">Show Suggestions</button>
         </div>
     </div>
 

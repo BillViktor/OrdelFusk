@@ -1,25 +1,21 @@
-﻿@inherits LayoutComponentBase
+﻿@using System.Globalization
+@using Blazored.Toast.Configuration
+@inherits LayoutComponentBase
 
-<BlazoredToasts />
+<BlazoredToasts Position="ToastPosition.BottomRight" Timeout="5" />
 
 <div class="page">
     <main>
         <nav class="navbar navbar-light sticky-top bg-dark-subtle p-2 justify-content-between">
-            <h5 text-white><b>Wordle Cheat</b></h5>
+            <h4 style="margin: 0" text-white><b>Wordle Cheat</b></h4>
 
             <!-- Language and dark/lightmode switch -->
-            <div class="d-flex flex-row">
-                <div>
-                    <i class="bi-translate"/>
-                </div>
-
-                <div style="margin-left: 20px" class="d-flex flex-row">
-                    <i class="bi-sun-fill" />
-                    <div class="form-check form-switch mx-2">
-                        <input onclick="darkModeSwitch()" class="form-check-input p-2" type="checkbox" id="flexSwitchCheckChecked" checked />
-                    </div>
-                    <i class="bi-moon-fill" />
+            <div class="d-flex flex-row align-items-center">
+               <i class="bi-sun-fill" />
+               <div class="form-check form-switch mx-2">
+                  <input style="cursor: pointer" onclick="darkModeSwitch()" class="form-check-input p-2" type="checkbox" id="flexSwitchCheckChecked" checked />
                </div>
+               <i class="bi-moon-fill" />
             </div>
         </nav>
         <article class="content px-4">
@@ -29,8 +25,9 @@
 </div>
 
 <script>
-   function darkModeSwitch() {
-       var element = document.body;
-       element.dataset.bsTheme = element.dataset.bsTheme == "light" ? "dark" : "light";
-   }
+    //Switches between dark and light mode
+    function darkModeSwitch() {
+          var element = document.body;
+          element.dataset.bsTheme = element.dataset.bsTheme == "light" ? "dark" : "light";
+    }
 </script>

@@ -1,5 +1,6 @@
 ﻿using Blazored.Toast.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace OrdelFusk.Pages
 {
@@ -17,7 +18,6 @@ namespace OrdelFusk.Pages
 
         //Paths to the word lists
         private string aSwedishWordListPath = "src/swedish_five_letter_words.txt";
-        private string aEnglishWordListPath = "src/english_five_letter_words.txt";
 
         //List of all the words
         List<string> aWordList = new List<string>();
