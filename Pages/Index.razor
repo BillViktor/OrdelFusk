@@ -1,77 +1,104 @@
 ﻿<PageTitle>Wordle Cheat</PageTitle>
 @page "/"
 
-<div class="container">
-   <!-- Instructions div with a collapsable instructions list -->
-    <div class="container p-3 my-3 bg-dark-subtle text-white rounded">
-        <button class="btn btn-primary" style="width: 100%" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInstructions" aria-expanded="false" aria-controls="collapseInstructions">Show Instructions</button>
-        <div class="collapse" id="collapseInstructions">
-            <div style="margin-top: 10px" class="card card-body">
-                <h5>Instructions</h5>
-                <ul>
-                    <li>Make your guess in the real game Ordel</li>
-                    <li>Fill in your guess in the input down below</li>
-                    <li>Click on the palette icon and choose the right color for each letter</li>
-                    <li>Press the "Show Suggestions" button, and the website will suggest the best words to guess!</li>
-                </ul>
-            </div>
-        </div>
-    </div>
+<div autofocus @onkeydown="KeyDown" style="outline: 0" tabindex="0">
+   <div style="width: 750px" class="container">
+      <!-- Instructions div with a collapsable instructions list -->
+       <div class="container p-3 my-3 bg-dark-subtle text-white rounded">
+           <button class="btn btn-primary" style="width: 100%" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInstructions" aria-expanded="false" aria-controls="collapseInstructions">Show Instructions</button>
+           <div class="collapse" id="collapseInstructions">
+               <div style="margin-top: 10px" class="card card-body">
+                   <h5>Instructions</h5>
+                   <ul>
+                       <li>Make your guess in the real game Ordel</li>
+                       <li>Fill in your guess in the input down below</li>
+                       <li>Click on the palette icon and choose the right color for each letter</li>
+                       <li>Press the "Show Suggestions" button, and the website will suggest the best words to guess!</li>
+                   </ul>
+               </div>
+           </div>
+       </div>
 
-    <!-- The guess area -->
-    <div class="container p-3 my-3 bg-dark-subtle text-white rounded">
-        @for (int i = 0; i < aCurrentGuess+1; i++)
-        {
-            <div style="margin-top: 10px" class="d-flex flex-row justify-content-between">
-                @for (int j = 0; j < 5; j++)
-                {
-                    int index = i * 5 + j;
-                    <div class="text-center">
-                        <input style="background-color: @aColorForLetter[index]; color: black; font-weight: bold; text-align: center" disabled="@(aCurrentGuess > i)" @bind="aLettersGuessed[index]" type="text" class="form-control" />
-                        <i @onclick="x => SetIndex(index)" data-bs-toggle="modal" data-bs-target="#staticBackdropColorPicker" class="bi-palette-fill d-block mt-2" style="cursor: pointer"></i>
-                    </div>
-                }
-            </div>
-        }
-        <div style="margin-top: 10px">
-            <button disabled="@(aIsBusy || aCurrentGuess >= 5)" @onclick="Guess" style="width: 100%" class="btn btn-primary">Show Suggestions</button>
-        </div>
-    </div>
-
-    <!-- Shows the suggested words-->
-    <div class="container p-3 my-3 bg-dark-subtle text-white rounded">
-        <h4>Suggested words</h4>
-        <table style="margin-top: 10px" class="table table-hover table-striped">
-            <thead>
-                <tr>
-                    <th>Word</th>
-                    <th>Score</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var word in aWordListWithScore.OrderByDescending(x => x.Value).Take(20))
-                {
-                    <tr>
-                        <td>@word.Key</td>
-                        <td>@word.Value.ToString("0.00")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Modal for showing the color palette -->
-<div class="modal fade" id="staticBackdropColorPicker" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div style="height: 150px" class="row p-3">
-                    <div class="col rounded pa-4" style="background-color: darkgray; margin-right: 10px" data-bs-dismiss="modal" @onclick="@(x => ChangeColor(aChosenIndex, "darkgray"))">&nbsp;</div>
-                    <div class="col rounded pa-4" style="background-color: purple; margin-right: 10px" data-bs-dismiss="modal" @onclick="@(x => ChangeColor(aChosenIndex, "purple"))">&nbsp;</div>
-                    <div class="col rounded pa-4" style="background-color: darkgreen" data-bs-dismiss="modal" @onclick="@(x => ChangeColor(aChosenIndex, "darkgreen"))">&nbsp;</div>
+        <!-- The guess area -->
+        <div class="container p-3 my-3 bg-dark-subtle rounded">
+            @for (int i = 0; i < mCurrentGuess + 1; i++)
+            {
+                <div style="margin-top: 10px" class="d-flex flex-row justify-content-between">
+                    @for (int j = 0; j < 5; j++)
+                    {
+                        int index = i * 5 + j;
+                        @if (i == mCurrentGuess)
+                        {
+                            //Current guess, only show text if we have input for that char, shows color picker when press
+                            <div @onclick="x => SetIndex(index)" data-bs-toggle="modal" data-bs-target="#staticBackdropColorPicker" style="background-color: @mColorForLetter[index]; height: 100px; width: 100px; display: flex; align-items: center; justify-content: center;">
+                                @if (mCurrentGuessChars.Count > j)
+                                {
+                                    <p style="color: black; font-size: 72px; text-align: center; cursor: default"><b>@mCurrentGuessChars[j]</b></p>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            //Previous guesses, only for show. Cant change color
+                            <div style="background-color: @mColorForLetter[index]; height: 100px; width: 100px; display: flex; align-items: center; justify-content: center;">
+                                <p style="color: black; font-size: 72px; text-align: center; cursor: default"><b>@mLettersGuessed[index]</b></p>
+                            </div>
+                        }
+                    }
                 </div>
-            </div>
+            }
         </div>
-    </div>
+
+       <!-- Shows the suggested words-->
+       <div class="container p-3 my-3 bg-dark-subtle text-white rounded">
+           <h4>Suggested words</h4>
+           <table style="margin-top: 10px" class="table table-hover table-striped">
+               <thead>
+                   <tr>
+                       <th>Word</th>
+                       <th>Score</th>
+                   </tr>
+               </thead>
+               <tbody>
+                   @foreach (var sWord in mWordListWithScore.OrderByDescending(x => x.Value).Take(20))
+                   {
+                       <tr>
+                           <td>@sWord.Key</td>
+                           <td>@sWord.Value.ToString("0.00")</td>
+                       </tr>
+                   }
+               </tbody>
+           </table>
+
+            @if (mWordListWithScore.Count == 0)
+            {
+               <div class="d-flex justify-content-center">
+                    <b>There are no possible words left!</b>
+               </div>
+            }
+       </div>
+   </div>
+
+   <!-- Modal for showing the color palette -->
+   <div class="modal fade" id="staticBackdropColorPicker" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+       <div class="modal-dialog">
+           <div class="modal-content">
+               <div class="modal-body">
+                   <div style="height: 150px" class="row p-3">
+                       <div class="col rounded pa-4" style="background-color: darkgray; margin-right: 10px" data-bs-dismiss="modal" @onclick="@(async () => await ChangeColor(mChosenIndex, "darkgray"))">&nbsp;</div>
+                       <div class="col rounded pa-4" style="background-color: purple; margin-right: 10px" data-bs-dismiss="modal" @onclick="@(async () => await ChangeColor(mChosenIndex, "purple"))">&nbsp;</div>
+                       <div class="col rounded pa-4" style="background-color: darkgreen" data-bs-dismiss="modal" @onclick="@(async () => await ChangeColor(mChosenIndex, "darkgreen"))">&nbsp;</div>
+                   </div>
+               </div>
+           </div>
+       </div>
+   </div>
 </div>
+
+
+<!-- Function to focus the div -->
+<script>
+    function setFocus() {
+        document.querySelector('div[tabindex="0"]').focus();
+    }
+</script>

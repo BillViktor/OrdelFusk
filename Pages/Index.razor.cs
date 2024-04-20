@@ -1,5 +1,6 @@
 ﻿using Blazored.Toast.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 
 namespace OrdelFusk.Pages
@@ -7,45 +8,57 @@ namespace OrdelFusk.Pages
     public partial class Index
     {
         [Inject] IToastService ToastService { get; set; }
+        [Inject] IJSRuntime JSRuntime { get; set; }
         [Inject] HttpClient HttpClient { get; set; }
 
+        //Path to the word list
+        private const string cSwedishWordListPath = "src/swedish_five_letter_words.txt";
+
         //An array of chars for the letters and an array of string for the background color of the letters
-        private char[] aLettersGuessed = new char[25];
-        private string[] aColorForLetter = new string[25];
-
-        //The current guess
-        private int aCurrentGuess = 0;
-
-        //Paths to the word lists
-        private string aSwedishWordListPath = "src/swedish_five_letter_words.txt";
+        private char[] mLettersGuessed = new char[25];
+        private string[] mColorForLetter = new string[25];
 
         //List of all the words
-        List<string> aWordList = new List<string>();
-
-        //Keeps track of the chosen index when choosing color
-        private int aChosenIndex = 0;
+        List<string> mWordList = new List<string>();
 
         //Dictionary for letter occurences
-        private Dictionary<char, int> aLetterOccurences = new Dictionary<char, int>();
+        private Dictionary<char, int> mLetterOccurences = new Dictionary<char, int>();
 
         //Dictionary for the word list and their corresponding score
-        private Dictionary<string, double> aWordListWithScore = new Dictionary<string, double>();
+        private Dictionary<string, double> mWordListWithScore = new Dictionary<string, double>();
+
+        //Keeps track of letters not to remove
+        private List<char> mLettersToNotRemove = new List<char>();
+
+        //Keeps track of the chosen index when choosing color
+        private int mChosenIndex = 0;
+
+        //The current guess
+        private int mCurrentGuess = 0;
 
         //Flag if the website is calculating
-        private bool aIsBusy = false;
+        private bool mIsBusy = false;
 
-        private List<char> aLettersToNotRemove = new List<char>();
+        private List<char> mCurrentGuessChars = new();
+
+        //Valid key inputs
+        private char[] aValidSwedishChars =
+        [
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'Å', 'Ä', 'Ö'
+        ];
 
         /// <summary>
         /// Sets the background color of all chars to darkgray.
         /// Reads in the words list
+        /// Initializes the dictionary
+        /// Calcu
         /// </summary>
         protected override async Task OnInitializedAsync()
         {
-            aIsBusy = true;
+            mIsBusy = true;
 
             //Fill the array with darkgray
-            Array.Fill(aColorForLetter, "darkgray");
+            Array.Fill(mColorForLetter, "darkgray");
 
             //Read in the word list
             await ReadWordList();
@@ -59,7 +72,7 @@ namespace OrdelFusk.Pages
             //Count the score
             CountScoreForWord();
 
-            aIsBusy = false;
+            mIsBusy = false;
         }
 
         /// <summary>
@@ -69,13 +82,13 @@ namespace OrdelFusk.Pages
         {
             for (char c = 'A'; c <= 'Z'; c++)
             {
-                aLetterOccurences.Add(c, 0);
+                mLetterOccurences.Add(c, 0);
             }
 
             //If Swedish, add Å, Ä & Ö manually
-            aLetterOccurences.Add('Å', 0);
-            aLetterOccurences.Add('Ä', 0);
-            aLetterOccurences.Add('Ö', 0);
+            mLetterOccurences.Add('Å', 0);
+            mLetterOccurences.Add('Ä', 0);
+            mLetterOccurences.Add('Ö', 0);
         }
 
         /// <summary>
@@ -86,8 +99,8 @@ namespace OrdelFusk.Pages
             try
             {
                 //Start by filling the wordslist with all words
-                var fileContent = await HttpClient.GetStringAsync(aSwedishWordListPath);
-                aWordList = fileContent.Split('\n').ToList();
+                var fileContent = await HttpClient.GetStringAsync(cSwedishWordListPath);
+                mWordList = fileContent.Split("\r\n").ToList();
             }
             catch (Exception ex)
             {
@@ -101,7 +114,7 @@ namespace OrdelFusk.Pages
         /// <param name="index"></param>
         private void SetIndex(int index)
         {
-            aChosenIndex = index;
+            mChosenIndex = index;
         }
 
         /// <summary>
@@ -109,9 +122,10 @@ namespace OrdelFusk.Pages
         /// </summary>
         /// <param name="index">The index in the colorforletter array to set the color to</param>
         /// <param name="color">The color to set (darkgray, purple or green)</param>
-        private void ChangeColor(int index, string color)
+        private async Task ChangeColor(int index, string color)
         {
-            aColorForLetter[index] = color;
+            mColorForLetter[index] = color;
+            await SetFocus();
         }
 
         /// <summary>
@@ -121,20 +135,20 @@ namespace OrdelFusk.Pages
         private void CalculateProbability()
         {
             //Set the values in the dic to 0
-            foreach(var key in aLetterOccurences.Keys)
+            foreach(var sKey in mLetterOccurences.Keys)
             {
-                aLetterOccurences[key] = 0;
+                mLetterOccurences[sKey] = 0;
             }
 
             //iterate all words
-            foreach (var word in aWordList)
+            foreach (var sWord in mWordList)
             {
                 //iterate all characters in the word
-                foreach (var c in word)
+                foreach (var c in sWord)
                 {
-                    if(aLetterOccurences.ContainsKey(c))
+                    if(mLetterOccurences.ContainsKey(c))
                     {
-                        aLetterOccurences[c] += 1;
+                        mLetterOccurences[c] += 1;
                     }
                 }
             }
@@ -149,47 +163,41 @@ namespace OrdelFusk.Pages
         /// </summary>
         private void Guess()
         {
-            aIsBusy = true;
+            mIsBusy = true;
+
+            //Make sure the word is valid
+            string word = new string(mCurrentGuessChars.ToArray());
 
             //Get the letters and the colors for the current guess
-            char[] aCurrentGuessArray = aLettersGuessed.Skip(aCurrentGuess * 5).Take(5).Select(char.ToUpper).ToArray();
-            string[] aCurrentColorArray = aColorForLetter.Skip(aCurrentGuess * 5).Take(5).ToArray();
-
-            //If any input is missing, cancel method and show error
-            if (aCurrentGuessArray.Any(x => x == '\0'))
-            {
-                ToastService.ShowError("You must fill all boxes with a character!");
-                aIsBusy = false;
-                return;
-            }
+            char[] aCurrentGuessArray = mCurrentGuessChars.ToArray();
+            string[] aCurrentColorArray = mColorForLetter.Skip(mCurrentGuess * 5).Take(5).ToArray();
 
             //Loop through all the letters
-            for(int i = 0; i<aCurrentGuessArray.Length; i++)
+            for (int i = 0; i < aCurrentGuessArray.Length; i++)
             {
                 if (aCurrentColorArray[i] == "darkgreen")
                 {
                     //If letter is green, remove all letters not containing that green letter on that position
-                    aWordList.RemoveAll(x => x[i] != aCurrentGuessArray[i]);
-
+                    mWordList.RemoveAll(x => x[i] != aCurrentGuessArray[i]);
                     //Add the letter to a list to not remove it if it occurs again on gray
-                    aLettersToNotRemove.Add(aCurrentGuessArray[i]);
+                    mLettersToNotRemove.Add(aCurrentGuessArray[i]);
                 }
                 else if (aCurrentColorArray[i] == "purple")
                 {
                     //Remove all words NOT containing that letter. And also all words containing that letter in that position
-                    aWordList.RemoveAll(x => !x.Contains(aCurrentGuessArray[i]) || x[i] == aCurrentGuessArray[i]);
+                    mWordList.RemoveAll(x => !x.Contains(aCurrentGuessArray[i]) || x[i] == aCurrentGuessArray[i]);
                 }
                 else if (aCurrentColorArray[i] == "darkgray")
                 {
-                    if(aLettersToNotRemove.Contains(aCurrentGuessArray[i])) 
+                    if (mLettersToNotRemove.Contains(aCurrentGuessArray[i]))
                     {
                         //If that letter is in the word. But not again, we remove all occurences where that letter is on the same place
-                        aWordList.RemoveAll(x => x[i] == aCurrentGuessArray[i]);
+                        mWordList.RemoveAll(x => x[i] == aCurrentGuessArray[i]);
                     }
                     else
                     {
                         //If the letter is truly not in the word. Remove all words with that letter
-                        aWordList.RemoveAll(x => x.Contains(aCurrentGuessArray[i]));
+                        mWordList.RemoveAll(x => x.Contains(aCurrentGuessArray[i]));
                     }
                 }
             }
@@ -198,8 +206,20 @@ namespace OrdelFusk.Pages
 
             CountScoreForWord();
 
-            aCurrentGuess++;
-            aIsBusy = false;
+
+            //Add the chars to the array
+            for (int i = 0; i < 5; i++)
+            {
+                mLettersGuessed[i + mCurrentGuess * 5] = aCurrentGuessArray[i];
+            }
+
+            //Reset word
+            mCurrentGuessChars.Clear();
+
+            //Increase guess count
+            mCurrentGuess++;
+
+            mIsBusy = false;
         }
 
         /// <summary>
@@ -208,21 +228,64 @@ namespace OrdelFusk.Pages
         /// </summary>
         private void CountScoreForWord()
         {
-            aWordListWithScore.Clear();
+            mWordListWithScore.Clear();
 
-            foreach (var word in aWordList)
+            foreach (var sWord in mWordList)
             {
                 int score = 0;
                 List<char> aCheckedLetters = new List<char>();
-                foreach(var c in word)
+                foreach(var c in sWord)
                 {
-                    if(aLetterOccurences.ContainsKey(c) && !aCheckedLetters.Contains(c))
+                    if(mLetterOccurences.ContainsKey(c) && !aCheckedLetters.Contains(c))
                     {
-                        score += aLetterOccurences[c];
+                        score += mLetterOccurences[c];
                         aCheckedLetters.Add(c);
                     }
                 }
-                aWordListWithScore.TryAdd(word, (double)score * 100 / aLetterOccurences.Sum(x => x.Value));
+                mWordListWithScore.TryAdd(sWord, (double)score * 100 / mLetterOccurences.Sum(x => x.Value));
+            }
+        }
+
+        /// <summary>
+        /// Calls a JavaScript function to set the focus to the div, so the KeyDown method will be called
+        /// </summary>
+        /// <returns></returns>
+        private async Task SetFocus()
+        {
+            await JSRuntime.InvokeVoidAsync("setFocus");
+        }
+
+        /// <summary>
+        /// Validates the key pressed.
+        /// </summary>
+        /// <param name="e"></param>
+        private void KeyDown(KeyboardEventArgs e)
+        {
+            if (e.Key == "Enter")
+            {
+                if (mCurrentGuessChars.Count < 5)
+                {
+                    ToastService.ShowError("You have to write five letters!");
+                }
+                else
+                {
+                    Guess();
+                }
+
+            }
+            else if (e.Key == "Backspace")
+            {
+                if (mCurrentGuessChars.Count > 0)
+                {
+                    mCurrentGuessChars.RemoveAt(mCurrentGuessChars.Count - 1);
+                }
+            }
+
+            char aCharPress;
+            if (!char.TryParse(e.Key.ToUpper(), out aCharPress)) return;
+            if (aValidSwedishChars.Contains(aCharPress) && mCurrentGuessChars.Count < 5)
+            {
+                mCurrentGuessChars.Add(aCharPress);
             }
         }
     }
