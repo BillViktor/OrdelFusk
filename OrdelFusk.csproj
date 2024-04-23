@@ -14,28 +14,4 @@
     <PackageReference Include="Microsoft.Extensions.Localization" Version="8.0.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Pages\CultureEn.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>CultureEn.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Pages\CultureSv.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>CultureSv.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Pages\CultureEn.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>CultureEn.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Pages\CultureSv.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>CultureSv.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-
 </Project>
